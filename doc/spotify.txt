@@ -1,0 +1,122 @@
+================================================================================
+INTRODUCTION                                                    *spotify.nvim*
+
+This plugin intends to provide users with a mechanism for interacting with
+the Spotify Web API (https://developer.spotify.com/documentation/web-api)
+from within Neovim.
+
+Personally, my primary use-case for this plugin is so that I can like the
+currently playing song (if I like it) without having to switch to my Spotify
+desktop client, click the "Add to Liked Songs" button, and switch back to
+Neovim, thus breaking my flow state. Wait, you mean you created an entire
+Spotify API plugin for Neovim, learning all the auth and token-refresh
+mumbo-jumbo, just so you can like a song from within Neovim?
+
+...Perhaps.
+
+As a result, that specific functionality comes out of the box; however, my
+hope is that this plugin will not become a giant wrapper around the Spotify,
+but will serve merely as a means for users to define their own functions or
+keybindings for calling the Spotify API from Neovim. That said, I can't
+predict the future, so who knows what will happen.
+
+spotify.setup({opts})                                           *spotify.setup()*
+    Initializes and authenticates the client. Must be run prior to anything
+    else.
+
+    Requires a Client ID and Client Secret from a Spotify developer app.
+    Create one at https://developer.spotify.com/dashboard.
+    I recommend using http://localhost:8888/callback for the Redirect URI.
+    If you would like to use a different port, specify the port you use with
+    {auth_redirect_uri_port}.
+
+
+    Parameters: ~
+        {opts}  (table)  setup options
+
+    Options: ~
+        {client_id}                 (string)    Client ID of the Spotify
+                                                developer app;
+                                                required
+        {client_secret}             (string)    Client Secret of the Spotify
+                                                developer app;
+                                                required
+        {scopes}                    (table)     List of this this client is
+                                                allowed to do
+                                                with your Spotify account;
+                                                default is all scopes
+        {auth_redirect_uri_port}    (integer)   Localhost port on which to
+                                                listen for the auth code.
+                                                Must match the Redirect URIs
+                                                of the Spotify developer app;
+                                                default is 8888
+
+    Usage: ~
+    >
+    require('spotify').setup{
+        client_id = "CLIENT_ID",
+        client_secret = "CLIENT_SECRET: fetch this securely, e.g. with pass",
+        scopes = {
+            "ugc-image-upload",
+            "user-read-playback-state",
+            -- ...
+        },
+        auth_redirect_uri_port = 8888
+    }
+
+================================================================================
+API                                                             *spotify.api()*
+
+The API module is the meat and potatos of this plugin. In particular
+    >
+    require('spotify.api').call(endpoint, method, body)
+<
+api.call({endpoint}, {method}, {body})                          *spotify.api.call()*
+    Calls the Spotify Web API at the specified {endpoint}, with the specified
+    HTTP {method}, with the optional {body}.
+
+    Paramters: ~
+        {endpoint}  (string)    The Spotify WEB API endpoint; required
+        {method}    (string)    The HTTP method; default is "get"
+        {body}      (table)     Data to pass to the API call; default is nil
+
+    Usage: ~
+    >
+    require('spotify.api').call('/me/player/currently-playing', 'get')
+<
+
+api.currently_playing()                                         *spotify.api.currently_playing()*
+    Prints data about the currently playing track, including the artist,
+    album, and track name.
+
+api.like_current_track()                                        *spotify.api.like_current_track()*
+    Adds the currently playing track to your Liked Songs.
+
+================================================================================
+AUTH                                                            *spotify.auth*
+
+You shouldn't ever have to call the Auth module as it gets automatically
+called in the right places within the primary and API modules; nonetheless,
+if you need to call it for some reason, or you're just interested, read on.
+    >
+auth.authenticate(                                              *spotify.auth.authenticate()*
+    {client_id},
+    {client_secret},
+    {scopes},
+    {redirect_uri_port}
+)
+    If auth tokens already exist, returns them; if the tokens are expired,
+    refreshes them and returns them; if no auth tokens exist, opens a Spotify
+    login page in your browser and returns auth tokens once authenticated.
+    In addition to returning the auth tokens, also caches them at
+    ~/.config/nvim/.spotify_tokens.json.
+
+    Paramters: ~
+        See |spotify.setup()|
+
+    Returns: ~
+        {access_token}  (string)    Spotify access token
+        {refresh_token} (string)    Spotify refresh token
+        {expires_at}    (integer)   Timestamp when access token expires
+
+    vim:tw=78:ts=8:ft=help:norl:
