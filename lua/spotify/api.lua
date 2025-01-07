@@ -86,10 +86,8 @@ local function milliseconds_to_display_time(ms)
     local formatted_time = ""
     if hours > 0 then
         formatted_time = string.format("%02d:%02d:%02d", hours, minutes, seconds)
-    elseif minutes > 0 then
-        formatted_time = string.format("%02d:%02d", minutes, seconds)
     else
-        formatted_time = string.format("%02d", seconds)
+        formatted_time = string.format("%02d:%02d", minutes, seconds)
     end
 
     return formatted_time
