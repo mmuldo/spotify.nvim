@@ -61,5 +61,5 @@ return {
 ## HELP!!!
 
 ```
-:h spotify
+:h spotify.nvim
 ```
