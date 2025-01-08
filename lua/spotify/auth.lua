@@ -141,14 +141,28 @@ end
 
 ---@return spotify.auth.Tokens | nil
 local function load_tokens()
-    local file = io.open(TOKEN_PATH, "r")
+    local file, err = io.open(TOKEN_PATH, "r")
     if not file then
+        vim.notify(
+            "Failed to open token file: " .. (err or "unknown error"),
+            vim.log.levels.ERROR
+        )
         return nil
     end
 
     local content = file:read("*a")
     file:close()
-    return vim.fn.json_decode(content)
+
+    local ok, tokens = pcall(vim.fn.json_decode, content)
+    if not ok then
+        vim.notify(
+            "Failed to decode token file: " .. tokens, -- error message is from `pcall`.
+            vim.log.levels.ERROR
+        )
+        return nil
+    end
+
+    return tokens
 end
 
 ---@param grant_type string
