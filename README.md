@@ -3,6 +3,13 @@
 Control Spotify from Neovim: one step closer to the Neovimux distribution all
 Emacs users fear...
 
+## Features
+* Make calls to the Spotify Web API with
+    ```lua
+    local response = require("spotify.api").call(endpoint, method, body)
+    ```
+* ...I guess that's it
+
 ## Quickstart
 
 Let's cut to the chase.
