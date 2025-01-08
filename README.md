@@ -1,39 +1,43 @@
 # `spotify.nvim`
 
+Control Spotify from Neovim: one step closer to the Neovimux distribution all
+Emacs users fear...
+
+## Quickstart
+
 Let's cut to the chase.
 
-```lua
-require("spotify").setup({
-    client_id = "CLIENT_ID",
-    client_secret = "CONSIDER_GETTING_THIS_FROM_SOMETHING_SECURE_LIKE_PASS",
-})
-
-new_playlist = require("spotify.api").call(
-    "/me/playlists",
-    "post",
-    {
-        name = "spotify.nvim",
-        description = "omg i created this with spotify.nvim???",
-        public = true
-    }
-)
-
-vim.notify(vim.inspect(new_playlist))
-
-vim.keymap.set("n", "<leader>ml", require("spotify.api").like_current_track)
-```
-
-## Where do I get a Client ID and Secret?
-
-Create a Spotify developer account if you haven't already,
-goto your [dashboard](https://developer.spotify.com/dashboard), and click
-"Create App".
-
-Fill out the form and for "Redirect URIs" add
-* http://localhost:8888/callback
-
-You can use another port if you would like, but be sure to specify the
-`auth_redirect_uri_port` parameter in the `setup` function.
+1. Create a [Spotify developer app](https://developer.spotify.com/dashboard) 
+with a redirect URI of http://localhost:8888/callback and
+copy the Client ID and Client Secret.
+2. Add the following somewhere in your Neovim config:
+    ```lua
+    require("spotify").setup({
+        client_id = "CLIENT_ID",
+        client_secret = "CLIENT_SECRET",
+    })
+    ```
+3. Create a function you find useful:
+    ```lua
+    local function new_spotify_playlist()
+        local playlists_endpoint = "/me/playlists"
+        local method = "post"
+        local playlist_body = {
+            name = "spotify.nvim",
+            description = "omg i created this with spotify.nvim???",
+            public = true
+        }
+        return require("spotify.api").call(playlists_endpoint, method, playlist_body)
+    end
+    ```
+4. Bind your function to a keymap:
+    ```lua
+    vim.keymap.set("n", "<leader>mnp", function()
+        local new_playlist = new_spotify_playlist()
+        vim.notify(vim.inspect(new_playlist))
+    end)
+    ```
+5. Repeat steps 3 and 4.
 
 ## Installation
 
@@ -116,6 +120,73 @@ few other functions to serve as examples.
 Instead of requesting new features, users are encouraged to define their own
 custom Spotify API calls within their configuration--and obviously share
 their config to inspire others!
+
+## Actual FAQs
+
+### Where do I get a Client ID and Secret?
+
+Create a Spotify developer account if you haven't already,
+goto your [dashboard](https://developer.spotify.com/dashboard), and click
+"Create App".
+
+Fill out the form and for "Redirect URIs" add
+* http://localhost:8888/callback
+
+You can use another port if you would like, but be sure to specify the
+`auth_redirect_uri_port` parameter in the `setup` function.
+
+### Can you provide a full example without being facetious?
+
+```lua
+-- /path/to/lazy/plugins/spotify.lua
+local function get_device_id()
+    local device_id
+    local devices = require("spotify.api").call("/me/player/devices").devices
+    local active_devices = vim.tbl_filter(function(device) return device.is_active end, devices)
+
+    if #active_devices > 0 then
+        device_id = active_devices[1].id
+    elseif #devices > 0 then
+        device_id = devices[1].id
+    else
+        vim.notify("no spotify devices found", vim.log.levels.WARN)
+        device_id = nil
+    end
+
+    return device_id
+end
+
+local function play_produced_by_neputunes_playlist()
+    local device_id = get_device_id()
+    if not device_id then
+        vim.notify("open spotify first!", vim.log.levels.ERROR)
+        return
+    end
+
+    require("spotify.api").call("/me/player/play?device_id=" .. device_id, "put", {
+        context_uri = "spotify:playlist:3gC3qkmGsyEMIfgsiynDPP"
+    })
+
+    print("playing \"Produced by: The Neptunes\"")
+end
+
+return {
+    dir = "~/code/neovim-plugins/spotify.nvim",
+    dependencies = {
+        "nvim-lua/plenary.nvim"
+    },
+    config = function()
+        require("spotify").setup({
+            client_id = "CLIENT_ID",
+            client_secret = "CLIENT_SECRET"
+        })
+
+        vim.keymap.set("n", "<leader>mpn", play_produced_by_neputunes_playlist)
+        vim.keymap.set("n", "<leader>mc", require("spotify.api").currently_playing)
+        vim.keymap.set("n", "<leader>ml", require("spotify.api").like_current_track)
+    end
+}
+```
 
 ## HELP!!!
 
