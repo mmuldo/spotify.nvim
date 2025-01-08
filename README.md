@@ -178,7 +178,7 @@ local function play_produced_by_neputunes_playlist()
 end
 
 return {
-    dir = "~/code/neovim-plugins/spotify.nvim",
+    "mmuldo/spotify.nvim",
     dependencies = {
         "nvim-lua/plenary.nvim"
     },
