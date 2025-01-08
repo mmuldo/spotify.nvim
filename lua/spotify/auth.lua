@@ -38,6 +38,17 @@ local function await_tokens_refresh()
     end
 end
 
+--- Executes a shell command 'safely' and validates its success.
+---
+---@param cmd string: The shell command to be executed.
+---@throws error if the command execution fails.
+local function safe_execute(cmd)
+    local success, reason, code = os.execute(cmd)
+    if not success then
+        error(string.format("Command failed: %s (Reason: %s, Code: %s)", cmd, reason, code))
+    end
+end
+
 local function open_in_browser(url)
     local cmd
     if vim.fn.has("mac") == 1 then
@@ -50,7 +61,7 @@ local function open_in_browser(url)
         error("Spotify Auth: Unsupported OS")
     end
 
-    os.execute(cmd)
+    safe_execute(cmd)
 end
 
 ---@param client_id string
@@ -156,7 +167,7 @@ local function save_auth_tokens(
 )
     local http = require("plenary.curl")
     local redirect_uri_param = redirect_uri_port and
-    "&redirect_uri=" .. string.format(REDIRECT_URI_FORMAT, redirect_uri_port) or ""
+        "&redirect_uri=" .. string.format(REDIRECT_URI_FORMAT, redirect_uri_port) or ""
     local body = string.format(
         TOKEN_REQUEST_BODY_FORMAT,
         grant_type,
