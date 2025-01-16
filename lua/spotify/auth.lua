@@ -181,7 +181,7 @@ local function save_auth_tokens(
                     }
                     save_tokens(tokens)
                 else
-                    error("Spotify Auth: error exchanging code: response.body")
+                    error("Spotify Auth: error exchanging code: " .. response.body)
                 end
                 state.refreshing_tokens = false
             end)
